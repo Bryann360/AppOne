@@ -1,6 +1,6 @@
 //
-//  HelloWorldApp.swift
-//  HelloWorld
+//  FlightFinderApp.swift
+//  FlightFinder
 //
 //  Created by Bryann Bueno on 20/07/25.
 //
@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct HelloWorldApp: App {
+struct FlightFinderApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SearchView()
         }
     }
 }

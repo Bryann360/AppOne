@@ -6,11 +6,14 @@
 //
 
 import Testing
+@testable import HelloWorld
 
 struct HelloWorldTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    @Test func searchReturnsResults() async throws {
+        let vm = FlightSearchViewModel()
+        await vm.search()
+        #expect(vm.results.count > 0)
     }
 
 }
