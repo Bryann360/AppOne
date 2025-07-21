@@ -9,7 +9,9 @@ struct FlightDetailView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)
-                .foregroundColor(.accentColor)
+                .foregroundStyle(
+                    LinearGradient(colors: [.pink, .purple], startPoint: .top, endPoint: .bottom)
+                )
 
             Text(flight.airline)
                 .font(.largeTitle)
@@ -23,6 +25,11 @@ struct FlightDetailView: View {
 
             Spacer()
         }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(LinearGradient(colors: [Color.white, Color.accentColor.opacity(0.1)], startPoint: .top, endPoint: .bottom))
+        )
         .padding()
         .navigationTitle("Detalhes")
     }

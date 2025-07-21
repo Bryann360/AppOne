@@ -10,6 +10,7 @@ struct ResultsView: View {
                     FlightRowView(flight: flight)
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Voos Encontrados")
         }
     }

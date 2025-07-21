@@ -23,6 +23,10 @@ struct FlightRowView: View {
                 .font(.headline)
         }
         .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(LinearGradient(colors: [.white, Color.accentColor.opacity(0.1)], startPoint: .leading, endPoint: .trailing))
+        )
     }
 }
 
