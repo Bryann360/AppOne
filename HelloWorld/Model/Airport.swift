@@ -9,8 +9,9 @@ struct Airport: Identifiable {
     let country: String?
 }
 
-struct AirportResponse: Decodable {
-    let metaAirports: [String: AirportDetails]
+struct RefDataResponse: Decodable {
+    let airports: [String: AirportDetails]?
+    let metaAirports: [String: [String]]
 }
 
 struct AirportDetails: Decodable {
