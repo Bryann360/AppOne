@@ -4,6 +4,12 @@ struct SearchView: View {
     @StateObject private var viewModel = FlightSearchViewModel()
     @State private var showResults = false
     @State private var animateButton = false
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case origin
+        case destination
+    }
 
     var body: some View {
         NavigationStack {
@@ -12,21 +18,35 @@ struct SearchView: View {
                     Image(systemName: "airplane.departure")
                         .foregroundStyle(.accent)
                     TextField("Origem", text: $viewModel.origin)
+                        .focused($focusedField, equals: .origin)
                         .textFieldStyle(.plain)
                 }
                 .padding()
                 .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
                 .padding(.horizontal)
+                if focusedField == .origin {
+                    suggestionView(for: viewModel.filteredOrigins) { code in
+                        viewModel.origin = code
+                        focusedField = nil
+                    }
+                }
 
                 HStack {
                     Image(systemName: "airplane.arrival")
                         .foregroundStyle(.accent)
                     TextField("Destino", text: $viewModel.destination)
+                        .focused($focusedField, equals: .destination)
                         .textFieldStyle(.plain)
                 }
                 .padding()
                 .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
                 .padding(.horizontal)
+                if focusedField == .destination {
+                    suggestionView(for: viewModel.filteredDestinations) { code in
+                        viewModel.destination = code
+                        focusedField = nil
+                    }
+                }
 
                 DatePicker("Data", selection: $viewModel.date, displayedComponents: .date)
                     .datePickerStyle(.compact)
@@ -65,10 +85,34 @@ struct SearchView: View {
                 ResultsView(viewModel: viewModel)
             }
         }
+        .task {
+            await viewModel.loadAirports()
+        }
         .background(
             LinearGradient(colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
                 .ignoresSafeArea()
         )
+    }
+
+    private func suggestionView(for airports: [Airport], selection: @escaping (String) -> Void) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(airports) { airport in
+                    HStack {
+                        Text("\(airport.code) - \(airport.name)")
+                            .font(.subheadline)
+                        Spacer()
+                    }
+                    .padding(6)
+                    .onTapGesture {
+                        selection(airport.code)
+                    }
+                    Divider()
+                }
+            }
+            .padding(.horizontal)
+        }
+        .frame(maxHeight: 120)
     }
 }
 

@@ -7,6 +7,40 @@ class FlightSearchViewModel: ObservableObject {
     @Published var destination: String = ""
     @Published var date: Date = Date()
     @Published var results: [Flight] = []
+    @Published var airports: [Airport] = []
+
+    func loadAirports() async {
+        guard let url = URL(string: "https://seats.aero/_api/vuerefdata") else { return }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let decoded = try JSONDecoder().decode(AirportResponse.self, from: data)
+            let list = decoded.metaAirports.map { key, value in
+                Airport(code: key,
+                        name: value.name ?? key,
+                        city: value.city,
+                        country: value.country)
+            }
+            airports = list.sorted { $0.code < $1.code }
+        } catch {
+            print("Failed to fetch airports: \(error)")
+        }
+    }
+
+    var filteredOrigins: [Airport] {
+        if origin.isEmpty { return [] }
+        return airports.filter {
+            $0.code.localizedCaseInsensitiveContains(origin) ||
+            $0.name.localizedCaseInsensitiveContains(origin)
+        }.prefix(5).map { $0 }
+    }
+
+    var filteredDestinations: [Airport] {
+        if destination.isEmpty { return [] }
+        return airports.filter {
+            $0.code.localizedCaseInsensitiveContains(destination) ||
+            $0.name.localizedCaseInsensitiveContains(destination)
+        }.prefix(5).map { $0 }
+    }
 
     func search() {
         results = mockFlights()
