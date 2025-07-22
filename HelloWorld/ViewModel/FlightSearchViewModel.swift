@@ -13,13 +13,30 @@ class FlightSearchViewModel: ObservableObject {
         guard let url = URL(string: "https://seats.aero/_api/vuerefdata") else { return }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            let decoded = try JSONDecoder().decode(AirportResponse.self, from: data)
-            let list = decoded.metaAirports.map { key, value in
-                Airport(code: key,
-                        name: value.name ?? key,
-                        city: value.city,
-                        country: value.country)
+            let decoded = try JSONDecoder().decode(RefDataResponse.self, from: data)
+
+            var codes = Set<String>()
+            for group in decoded.metaAirports.values {
+                codes.formUnion(group)
             }
+
+            var list: [Airport] = []
+            if let details = decoded.airports {
+                for code in codes {
+                    let info = details[code]
+                    list.append(
+                        Airport(code: code,
+                                name: info?.name ?? code,
+                                city: info?.city,
+                                country: info?.country)
+                    )
+                }
+            } else {
+                for code in codes {
+                    list.append(Airport(code: code, name: code, city: nil, country: nil))
+                }
+            }
+
             airports = list.sorted { $0.code < $1.code }
         } catch {
             print("Failed to fetch airports: \(error)")
