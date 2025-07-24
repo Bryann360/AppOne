@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SearchView: View {
     @StateObject private var viewModel = FlightSearchViewModel()
-    @State private var showResults = false
+    @State private var showDeals = false
     @State private var animateButton = false
     @FocusState private var focusedField: Field?
 
@@ -13,38 +13,50 @@ struct SearchView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                HStack {
-                    Image(systemName: "airplane.departure")
-                        .foregroundStyle(.accent)
-                    TextField("Origem", text: $viewModel.origin)
-                        .focused($focusedField, equals: .origin)
-                        .textFieldStyle(.plain)
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
-                .padding(.horizontal)
-                if focusedField == .origin {
-                    suggestionView(for: viewModel.filteredOrigins) { code in
-                        viewModel.origin = code
-                        focusedField = nil
+            VStack(spacing: 0) {
+                ZStack(alignment: .top) {
+                    HStack {
+                        Image(systemName: "airplane.departure")
+                            .foregroundStyle(.accent)
+                        TextField("Origem", text: $viewModel.origin)
+                            .focused($focusedField, equals: .origin)
+                            .textFieldStyle(.plain)
+                    }
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
+                    .padding(.horizontal)
+
+                    if focusedField == .origin {
+                        suggestionView(for: viewModel.filteredOrigins) { code in
+                            viewModel.origin = code
+                            focusedField = nil
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 56)
+                        .zIndex(1)
                     }
                 }
 
-                HStack {
-                    Image(systemName: "airplane.arrival")
-                        .foregroundStyle(.accent)
-                    TextField("Destino", text: $viewModel.destination)
-                        .focused($focusedField, equals: .destination)
-                        .textFieldStyle(.plain)
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
-                .padding(.horizontal)
-                if focusedField == .destination {
-                    suggestionView(for: viewModel.filteredDestinations) { code in
-                        viewModel.destination = code
-                        focusedField = nil
+                ZStack(alignment: .top) {
+                    HStack {
+                        Image(systemName: "airplane.arrival")
+                            .foregroundStyle(.accent)
+                        TextField("Destino", text: $viewModel.destination)
+                            .focused($focusedField, equals: .destination)
+                            .textFieldStyle(.plain)
+                    }
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
+                    .padding(.horizontal)
+
+                    if focusedField == .destination {
+                        suggestionView(for: viewModel.filteredDestinations) { code in
+                            viewModel.destination = code
+                            focusedField = nil
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 56)
+                        .zIndex(1)
                     }
                 }
 
@@ -54,13 +66,15 @@ struct SearchView: View {
                     .tint(.accentColor)
 
                 Button(action: {
-                    viewModel.search()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
-                        animateButton = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        animateButton = false
-                        showResults = true
+                    Task {
+                        await viewModel.search()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                            animateButton = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            animateButton = false
+                            showDeals = true
+                        }
                     }
                 }) {
                     Text("Buscar Voos")
@@ -76,13 +90,15 @@ struct SearchView: View {
                         .shadow(color: .accentColor.opacity(0.4), radius: 5, x: 0, y: 5)
                         .padding(.horizontal)
                 }
-                .padding(.top)
+
 
                 Spacer()
             }
             .navigationTitle("FlightFinder")
-            .sheet(isPresented: $showResults) {
-                ResultsView(viewModel: viewModel)
+            .sheet(isPresented: $showDeals) {
+                NavigationStack {
+                    FlightDealsView(flights: viewModel.results)
+                }
             }
         }
         .task {
