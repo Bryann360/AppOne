@@ -12,7 +12,7 @@ struct FlightFinderApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                FlightDealsView()
+                SearchView()
             }
             .accentColor(.purple)
         }

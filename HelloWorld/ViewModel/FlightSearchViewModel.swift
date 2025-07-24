@@ -54,15 +54,63 @@ class FlightSearchViewModel: ObservableObject {
         }.prefix(5).map { $0 }
     }
 
-    func search() {
-        results = mockFlights()
+    private let token = "pro_2jYo3iV7cYMPIExYfkMhdWbcn2Y"
+
+    struct SearchResponse: Decodable {
+        let data: [SearchItem]
     }
 
-    private func mockFlights() -> [Flight] {
-        [
-            Flight(airline: "Swift Air", departure: "08:00", arrival: "10:00", price: "$199", icon: "airplane"),
-            Flight(airline: "Code Airlines", departure: "12:00", arrival: "14:30", price: "$249", icon: "airplane.circle"),
-            Flight(airline: "Test Flights", departure: "18:00", arrival: "20:15", price: "$179", icon: "airplane"),
-        ]
+    struct SearchItem: Decodable {
+        let ID: String
+        let Date: String
+        let Route: SearchRoute
+        let YAirlines: String?
+        let JAirlines: String?
+        let YMileageCostRaw: Int?
+        let JMileageCostRaw: Int?
+        let YTotalTaxesRaw: Int?
+        let JTotalTaxesRaw: Int?
+    }
+
+    struct SearchRoute: Decodable {
+        let OriginAirport: String
+        let DestinationAirport: String
+    }
+
+    func search() async {
+        guard let url = URL(string: "https://seats.aero/partnerapi/search?take=500&include_trips=false&only_direct_flights=false&include_filtered=false") else {
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.addValue(token, forHTTPHeaderField: "Partner-Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "accept")
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let decoded = try JSONDecoder().decode(SearchResponse.self, from: data)
+
+            let filtered = decoded.data.filter { item in
+                let originMatch = origin.isEmpty || item.Route.OriginAirport.localizedCaseInsensitiveCompare(origin) == .orderedSame
+                let destMatch = destination.isEmpty || item.Route.DestinationAirport.localizedCaseInsensitiveCompare(destination) == .orderedSame
+                return originMatch && destMatch
+            }
+
+            results = filtered.map { item in
+                let airline = (item.JAirlines?.isEmpty == false ? item.JAirlines : item.YAirlines) ?? ""
+                let miles = item.JMileageCostRaw ?? item.YMileageCostRaw ?? 0
+                let taxes = item.JTotalTaxesRaw ?? item.YTotalTaxesRaw ?? 0
+                return Flight(
+                    airline: airline,
+                    departure: item.Route.OriginAirport,
+                    arrival: item.Route.DestinationAirport,
+                    price: "\(miles) mi + $\(taxes)",
+                    icon: "airplane"
+                )
+            }
+        } catch {
+            print("Failed to search flights: \(error)")
+            results = []
+        }
     }
 }

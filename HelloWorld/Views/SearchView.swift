@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SearchView: View {
     @StateObject private var viewModel = FlightSearchViewModel()
-    @State private var showResults = false
+    @State private var showDeals = false
     @State private var animateButton = false
     @FocusState private var focusedField: Field?
 
@@ -13,7 +13,7 @@ struct SearchView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            VStack(spacing: 8) {
                 HStack {
                     Image(systemName: "airplane.departure")
                         .foregroundStyle(.accent)
@@ -54,13 +54,15 @@ struct SearchView: View {
                     .tint(.accentColor)
 
                 Button(action: {
-                    viewModel.search()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
-                        animateButton = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        animateButton = false
-                        showResults = true
+                    Task {
+                        await viewModel.search()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                            animateButton = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            animateButton = false
+                            showDeals = true
+                        }
                     }
                 }) {
                     Text("Buscar Voos")
@@ -76,13 +78,15 @@ struct SearchView: View {
                         .shadow(color: .accentColor.opacity(0.4), radius: 5, x: 0, y: 5)
                         .padding(.horizontal)
                 }
-                .padding(.top)
+                .padding(.top, 8)
 
                 Spacer()
             }
             .navigationTitle("FlightFinder")
-            .sheet(isPresented: $showResults) {
-                ResultsView(viewModel: viewModel)
+            .sheet(isPresented: $showDeals) {
+                NavigationStack {
+                    FlightDealsView(flights: viewModel.results)
+                }
             }
         }
         .task {
