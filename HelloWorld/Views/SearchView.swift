@@ -16,7 +16,7 @@ struct SearchView: View {
             VStack(spacing: 8) {
                 HStack {
                     Image(systemName: "airplane.departure")
-                        .foregroundStyle(.accent)
+                        .foregroundColor(.accentColor)
                     TextField("Origem", text: $viewModel.origin)
                         .focused($focusedField, equals: .origin)
                         .textFieldStyle(.plain)
@@ -33,7 +33,7 @@ struct SearchView: View {
 
                 HStack {
                     Image(systemName: "airplane.arrival")
-                        .foregroundStyle(.accent)
+                        .foregroundColor(.accentColor)
                     TextField("Destino", text: $viewModel.destination)
                         .focused($focusedField, equals: .destination)
                         .textFieldStyle(.plain)
