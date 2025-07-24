@@ -14,7 +14,7 @@ struct FlightFinderApp: App {
             NavigationStack {
                 FlightDealsView()
             }
-            .accentColor(.purple)
+            .accentColor(.teal)
         }
     }
 }
