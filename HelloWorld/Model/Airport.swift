@@ -12,6 +12,7 @@ struct Airport: Identifiable {
 struct RefDataResponse: Decodable {
     let airports: [String: AirportDetails]?
     let metaAirports: [String: [String]]
+    let airportNames: [String: String]?
 }
 
 struct AirportDetails: Decodable {

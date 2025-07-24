@@ -21,20 +21,15 @@ class FlightSearchViewModel: ObservableObject {
             }
 
             var list: [Airport] = []
-            if let details = decoded.airports {
-                for code in codes {
-                    let info = details[code]
-                    list.append(
-                        Airport(code: code,
-                                name: info?.name ?? code,
-                                city: info?.city,
-                                country: info?.country)
-                    )
-                }
-            } else {
-                for code in codes {
-                    list.append(Airport(code: code, name: code, city: nil, country: nil))
-                }
+            for code in codes {
+                let info = decoded.airports?[code]
+                let resolvedName = decoded.airportNames?[code] ?? info?.name ?? code
+                list.append(
+                    Airport(code: code,
+                            name: resolvedName,
+                            city: info?.city,
+                            country: info?.country)
+                )
             }
 
             airports = list.sorted { $0.code < $1.code }

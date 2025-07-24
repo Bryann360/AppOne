@@ -99,8 +99,15 @@ struct SearchView: View {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(airports) { airport in
                     HStack {
-                        Text(label(for: airport))
-                            .font(.subheadline)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(airport.code)
+                                .font(.subheadline)
+                                .bold()
+                            Text(airport.name)
+                                .font(.caption)
+                                .italic()
+                                .foregroundColor(.secondary)
+                        }
                         Spacer()
                     }
                     .padding(6)
@@ -115,16 +122,6 @@ struct SearchView: View {
         .frame(maxHeight: 120)
     }
 
-    private func label(for airport: Airport) -> String {
-        var text = "\(airport.code) - \(airport.name)"
-        if let city = airport.city {
-            text += ", \(city)"
-        }
-        if let country = airport.country {
-            text += " - \(country)"
-        }
-        return text
-    }
 }
 
 #Preview {
