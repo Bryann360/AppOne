@@ -13,17 +13,14 @@ struct SearchView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                HStack {
-                    Image(systemName: "airplane.departure")
-                        .foregroundStyle(.accent)
-                    TextField("Origem", text: $viewModel.origin)
-                        .focused($focusedField, equals: .origin)
-                        .textFieldStyle(.plain)
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
-                .padding(.horizontal)
+            VStack(spacing: 24) {
+                header
+
+                SearchField(icon: "airplane.departure",
+                            placeholder: "Origem",
+                            text: $viewModel.origin,
+                            focusedField: $focusedField,
+                            field: .origin)
                 if focusedField == .origin {
                     suggestionView(for: viewModel.filteredOrigins) { code in
                         viewModel.origin = code
@@ -31,16 +28,11 @@ struct SearchView: View {
                     }
                 }
 
-                HStack {
-                    Image(systemName: "airplane.arrival")
-                        .foregroundStyle(.accent)
-                    TextField("Destino", text: $viewModel.destination)
-                        .focused($focusedField, equals: .destination)
-                        .textFieldStyle(.plain)
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 2))
-                .padding(.horizontal)
+                SearchField(icon: "airplane.arrival",
+                            placeholder: "Destino",
+                            text: $viewModel.destination,
+                            focusedField: $focusedField,
+                            field: .destination)
                 if focusedField == .destination {
                     suggestionView(for: viewModel.filteredDestinations) { code in
                         viewModel.destination = code
@@ -49,11 +41,12 @@ struct SearchView: View {
                 }
 
                 DatePicker("Data", selection: $viewModel.date, displayedComponents: .date)
+                    .font(.system(.subheadline, design: .rounded))
                     .datePickerStyle(.compact)
                     .padding(.horizontal)
-                    .tint(.accentColor)
+                    .tint(.teal)
 
-                Button(action: {
+                PrimaryActionButton(title: "Buscar Voos", animate: animateButton) {
                     viewModel.search()
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
                         animateButton = true
@@ -62,25 +55,11 @@ struct SearchView: View {
                         animateButton = false
                         showResults = true
                     }
-                }) {
-                    Text("Buscar Voos")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            LinearGradient(colors: [.pink, .purple], startPoint: .leading, endPoint: .trailing)
-                        )
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .scaleEffect(animateButton ? 1.1 : 1.0)
-                        .shadow(color: .accentColor.opacity(0.4), radius: 5, x: 0, y: 5)
-                        .padding(.horizontal)
                 }
                 .padding(.top)
 
                 Spacer()
             }
-            .navigationTitle("FlightFinder")
             .sheet(isPresented: $showResults) {
                 ResultsView(viewModel: viewModel)
             }
@@ -89,9 +68,20 @@ struct SearchView: View {
             await viewModel.loadAirports()
         }
         .background(
-            LinearGradient(colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            LinearGradient(colors: [Color.teal.opacity(0.15), Color.indigo.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing)
                 .ignoresSafeArea()
         )
+    }
+
+    private var header: some View {
+        Text("Breton")
+            .font(.largeTitle.bold())
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 20)
+            .padding(.horizontal)
+            .background(Color.teal)
+            .ignoresSafeArea(edges: .top)
     }
 
     private func suggestionView(for airports: [Airport], selection: @escaping (String) -> Void) -> some View {
