@@ -11,8 +11,10 @@ import SwiftUI
 struct FlightFinderApp: App {
     var body: some Scene {
         WindowGroup {
-            SearchView()
-                .accentColor(.purple)
+            NavigationStack {
+                FlightDealsView()
+            }
+            .accentColor(.purple)
         }
     }
 }
