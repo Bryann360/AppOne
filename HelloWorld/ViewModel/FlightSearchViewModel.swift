@@ -54,15 +54,85 @@ class FlightSearchViewModel: ObservableObject {
         }.prefix(5).map { $0 }
     }
 
-    func search() {
-        results = mockFlights()
+    private let token = "pro_2jYo3iV7cYMPIExYfkMhdWbcn2Y"
+
+    struct SearchResponse: Decodable {
+        let data: [SearchItem]
     }
 
-    private func mockFlights() -> [Flight] {
-        [
-            Flight(airline: "Swift Air", departure: "08:00", arrival: "10:00", price: "$199", icon: "airplane"),
-            Flight(airline: "Code Airlines", departure: "12:00", arrival: "14:30", price: "$249", icon: "airplane.circle"),
-            Flight(airline: "Test Flights", departure: "18:00", arrival: "20:15", price: "$179", icon: "airplane"),
+    struct SearchItem: Decodable {
+        let ID: String
+        let Date: String
+        let Route: SearchRoute
+        let YAirlines: String?
+        let JAirlines: String?
+        let YMileageCostRaw: Int?
+        let JMileageCostRaw: Int?
+        let YTotalTaxesRaw: Int?
+        let JTotalTaxesRaw: Int?
+    }
+
+    struct SearchRoute: Decodable {
+        let OriginAirport: String
+        let DestinationAirport: String
+    }
+
+    func search() async {
+        var components = URLComponents(string: "https://seats.aero/partnerapi/search")
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "take", value: "500"),
+            URLQueryItem(name: "include_trips", value: "false"),
+            URLQueryItem(name: "only_direct_flights", value: "false"),
+            URLQueryItem(name: "include_filtered", value: "false")
         ]
+        if !origin.isEmpty {
+            queryItems.append(URLQueryItem(name: "origin", value: origin))
+        }
+        if !destination.isEmpty {
+            queryItems.append(URLQueryItem(name: "destination", value: destination))
+        }
+        components?.queryItems = queryItems
+
+        guard let url = components?.url else { return }
+
+        var request = URLRequest(url: url)
+        request.addValue(token, forHTTPHeaderField: "Partner-Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "accept")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                let text = String(data: data, encoding: .utf8) ?? "<no body>"
+                print("Unexpected response: \(response)\n\(text)")
+                results = []
+                return
+            }
+
+            do {
+                let decoded = try JSONDecoder().decode(SearchResponse.self, from: data)
+
+                results = decoded.data.map { item in
+                    let airline = (item.JAirlines?.isEmpty == false ? item.JAirlines : item.YAirlines) ?? ""
+                    let miles = item.JMileageCostRaw ?? item.YMileageCostRaw ?? 0
+                    let taxes = item.JTotalTaxesRaw ?? item.YTotalTaxesRaw ?? 0
+                    return Flight(
+                        airline: airline,
+                        departure: item.Route.OriginAirport,
+                        arrival: item.Route.DestinationAirport,
+                        price: "\(miles) mi + $\(taxes)",
+                        icon: "airplane"
+                    )
+                }
+            } catch {
+                let text = String(data: data, encoding: .utf8) ?? "<unreadable>"
+                print("Decoding error: \(error)\nRaw response: \n\(text)")
+                results = []
+            }
+        } catch {
+            print("Failed to search flights: \(error)")
+            results = []
+        }
     }
 }
